@@ -11,19 +11,28 @@ class JoyStatus:
         self.bark = False
 
 def control_gopigo(robot, joystatus):
+    moving = False
     while True:
         d = joystatus.direction
-        if d != (0, 0):
-            if d[1] != 0:
-                print "Driving robot {}".format(d[1])
-                robot.drive_degrees(d[1] * 10)
-                print "Done"
-            elif d[0] != 0:
-                print "Turning robot {}".format(d[0])
-                robot.turn_degrees(d[0] * 5)
-                print "Done"
-        else:
-            time.sleep(0.5)
+        if d != (0, 0) and not moving:
+            moving = True
+            if d[1] > 0 :
+                print "Driving robot forward"
+                robot.forward()
+            elif d[1] < 0 :
+                print "Driving robot backward"
+                robot.backward()
+            elif d[0] > 0:
+                print "Turning robot right"
+                robot.right()
+            elif d[0] < 0:
+                print "Turning robot left"
+                robot.left()
+        elif d == (0, 0) and moving:
+            moving = False
+            robot.stop()
+
+        time.sleep(0.5)
 
 
 robot = easy.EasyGoPiGo3()
@@ -43,19 +52,15 @@ joystatus = JoyStatus()
 thread.start_new_thread(control_gopigo, (robot, joystatus))
 
 clock = pygame.time.Clock()
-count = 0
 robot.set_right_eye_color((255, 0, 0))
 robot.open_right_eye()
 while (True):
-    clock.tick(1)
-    print "Count={}".format(count)
+    clock.tick(10)
     pygame.event.get()
     js = pygame.joystick.Joystick(0)
     js.init()
     joystatus.direction = js.get_hat(0)
-    count = count + 1
 
-sys.exit()
 
             
     
