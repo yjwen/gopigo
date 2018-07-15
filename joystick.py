@@ -12,14 +12,24 @@ class JoyStatus:
 
 def control_gopigo(robot, joystatus):
     moving = False
+    prev_speed = robot.get_speed() // 100
     while True:
         d = joystatus.direction
+        print "d={}".format(d)
+        if d[1] < 0 or d[1] > 0:
+            speed = int(abs(d[1]) * 6) + 1
+            print "speed={}, prev_speed={}".format(speed, prev_speed)
+            if (speed != prev_speed):
+                print "Setting speed to {}".format(speed)
+                robot.set_speed(speed * 100)
+                prev_speed = speed
+
         if d != (0, 0) and not moving:
             moving = True
-            if d[1] > 0 :
+            if d[1] < 0 :
                 print "Driving robot forward"
                 robot.forward()
-            elif d[1] < 0 :
+            elif d[1] > 0 :
                 print "Driving robot backward"
                 robot.backward()
             elif d[0] > 0:
@@ -59,7 +69,8 @@ while (True):
     pygame.event.get()
     js = pygame.joystick.Joystick(0)
     js.init()
-    joystatus.direction = js.get_hat(0)
+    joystatus.direction = (js.get_axis(0), js.get_axis(1))
+
 
 
             
