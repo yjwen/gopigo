@@ -2,6 +2,8 @@ import pygame
 import sys
 import time
 import thread
+import threading
+import stream
 import easygopigo3 as easy
 
 class JoyStatus:
@@ -47,7 +49,7 @@ def control_gopigo(robot, joystatus):
 
 robot = easy.EasyGoPiGo3()
 robot.close_eyes()
-robot.set_left_eye_color((255, 0, 0))
+robot.set_left_eye_color((0, 255, 0))
 robot.open_left_eye()
 pygame.init()
 
@@ -62,17 +64,26 @@ joystatus = JoyStatus()
 thread.start_new_thread(control_gopigo, (robot, joystatus))
 
 clock = pygame.time.Clock()
-robot.set_right_eye_color((255, 0, 0))
+robot.set_right_eye_color((0, 255, 0))
 robot.open_right_eye()
+streaming_cv = None
+b1_pressed = 0
 while (True):
     clock.tick(10)
+    if b1_pressed > 0:
+        b1_pressed = b1_pressed - 1
     pygame.event.get()
     js = pygame.joystick.Joystick(0)
     js.init()
     joystatus.direction = (js.get_axis(0), js.get_axis(1))
-
-
-
-            
-    
-    
+    if js.get_button(1) and b1_pressed == 0:
+        b1_pressed = 10
+        if streaming_cv is None:
+            streaming_cv = threading.Condition()
+            thread.start_new_thread(stream.send_stream, (robot, streaming_cv))
+        else:
+            print "Stopping streaming"
+            streaming_cv.acquire()
+            streaming_cv.notify_all()
+            streaming_cv.release()
+            streaming_cv = None
