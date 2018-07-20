@@ -1,7 +1,7 @@
 import pygame
 import sys
 import time
-import threading
+import thread 
 import stream_server
 import easygopigo3 as easy
 
@@ -59,6 +59,7 @@ print "Found {} joysticks".format(js_count)
 if (js_count == 0):
     sys.exit()
 joystatus = JoyStatus()
+control_thread = thread.start_new_thread(control_gopigo, (robot, joystatus))
 
 video_thread = None
 
@@ -67,6 +68,8 @@ robot.set_right_eye_color((0, 255, 0))
 robot.open_right_eye()
 streaming_cv = None
 b1_pressed = 0
+led = robot.init_led()
+led_on = False
 while (True):
     clock.tick(10)
     pygame.event.get()
@@ -76,9 +79,13 @@ while (True):
     if js.get_button(1):
         if video_thread is None or not video_thread.is_alive():
             print "Starting video"
-            robot.close_eyes()
-            robot.set_eye_color((255, 0, 0))
-            robot.open_eyes()
-            video_thread = threading.Thread(target = stream_server.start)
-            video_thread.start()
+            video_thread = thread.start_new_thread(stream_server.start, (robot,))
+    if js.get_button(5):
+        if led_on:
+            led.light_off();
+            led_on = False
+        else:
+            led.light_max();
+            led_on = True
+
 

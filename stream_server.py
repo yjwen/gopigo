@@ -4,6 +4,7 @@ import picamera
 
 def start(robot = None):
     if robot is not None:
+        robot.close_eyes()
         robot.set_left_eye_color((255, 0, 0))
     camera = picamera.PiCamera()
     camera.resolution = (640, 480)
@@ -17,7 +18,7 @@ def start(robot = None):
     connection = server_socket.accept()[0].makefile('wb')
     try:
         camera.start_recording(connection, format='h264')
-        camera.wait_recording(600)
+        camera.wait_recording(3600)
         camera.stop_recording()
     finally:
         connection.close()
